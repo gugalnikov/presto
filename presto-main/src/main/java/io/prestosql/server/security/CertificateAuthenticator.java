@@ -16,12 +16,14 @@ package io.prestosql.server.security;
 import javax.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
+import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
 
 public class CertificateAuthenticator
         implements Authenticator
 {
     private static final String X509_ATTRIBUTE = "javax.servlet.request.X509Certificate";
+    private static final String SPIFFE_PREFIX = "spiffe://";
 
     @Override
     public Principal authenticate(HttpServletRequest request)
@@ -31,6 +33,21 @@ public class CertificateAuthenticator
         if ((certs == null) || (certs.length == 0)) {
             throw new AuthenticationException(null);
         }
+        //System.out.println("Certs: " + certs.length);
+        System.out.println("Principal : " + certs[0].getSubjectX500Principal());
+        //System.out.println("Cert2 : " + certs[1].getSubjectX500Principal());
+        //System.out.println("Cert 1: " + certs[0].toString());
+        //System.out.println("Cert 2: " + certs[1].toString());
+        System.out.println("Serial Number: " + certs[0].getSerialNumber());
+
+        try {
+            //System.out.println("URI: " + certs[1].getSubjectAlternativeNames().size());
+            System.out.println("URI: " + certs[0].getSubjectAlternativeNames().stream().findFirst().get().toString());
+            //System.out.println("CertificateAuthenticator: " + certs[0].getExtendedKeyUsage().get(1).toString());
+        } catch (CertificateParsingException e) {
+            e.printStackTrace();
+        }
+
         return certs[0].getSubjectX500Principal();
     }
 }

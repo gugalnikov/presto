@@ -107,7 +107,9 @@ public class AuthenticationFilter
             }
 
             // authentication succeeded
-            nextFilter.doFilter(withPrincipal(request, principal), response);
+            if (principal != null) {
+                nextFilter.doFilter(withPrincipal(request, principal), response);
+            }
             return;
         }
 

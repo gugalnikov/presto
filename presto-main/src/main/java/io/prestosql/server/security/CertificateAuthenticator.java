@@ -13,17 +13,31 @@
  */
 package io.prestosql.server.security;
 
+import io.airlift.log.Logger;
+import io.prestosql.spi.security.AccessDeniedException;
+
+import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
-import java.security.cert.CertificateParsingException;
 import java.security.cert.X509Certificate;
+
+import static java.util.Objects.requireNonNull;
 
 public class CertificateAuthenticator
         implements Authenticator
 {
     private static final String X509_ATTRIBUTE = "javax.servlet.request.X509Certificate";
-    private static final String SPIFFE_PREFIX = "spiffe://";
+    private static final Logger log = Logger.get(CertificateAuthenticator.class);
+
+    private final CertificateAuthenticatorManager authenticatorManager;
+
+    @Inject
+    public CertificateAuthenticator(CertificateAuthenticatorManager authenticatorManager)
+    {
+        this.authenticatorManager = requireNonNull(authenticatorManager, "authenticatorManager is null");
+        authenticatorManager.setRequired();
+    }
 
     @Override
     public Principal authenticate(HttpServletRequest request)
@@ -33,21 +47,21 @@ public class CertificateAuthenticator
         if ((certs == null) || (certs.length == 0)) {
             throw new AuthenticationException(null);
         }
-        //System.out.println("Certs: " + certs.length);
-        System.out.println("Principal : " + certs[0].getSubjectX500Principal());
-        //System.out.println("Cert2 : " + certs[1].getSubjectX500Principal());
-        //System.out.println("Cert 1: " + certs[0].toString());
-        //System.out.println("Cert 2: " + certs[1].toString());
-        System.out.println("Serial Number: " + certs[0].getSerialNumber());
 
         try {
-            //System.out.println("URI: " + certs[1].getSubjectAlternativeNames().size());
-            System.out.println("URI: " + certs[0].getSubjectAlternativeNames().stream().findFirst().get().toString());
-            //System.out.println("CertificateAuthenticator: " + certs[0].getExtendedKeyUsage().get(1).toString());
-        } catch (CertificateParsingException e) {
-            e.printStackTrace();
+            return authenticatorManager.getAuthenticator().authenticate(certs);
         }
+        catch (AccessDeniedException e) {
+            throw needAuthentication(e.getMessage());
+        }
+        catch (RuntimeException e) {
+            log.debug("CertificateAuthenticator plugin hasn't been loaded yet...");
+            return null;
+        }
+    }
 
-        return certs[0].getSubjectX500Principal();
+    private static AuthenticationException needAuthentication(String message)
+    {
+        return new AuthenticationException(message, "Basic realm=\"Presto\"");
     }
 }

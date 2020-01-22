@@ -29,7 +29,7 @@ public class ConsulConnectAuthenticatorFactory
     @Override
     public String getName()
     {
-        return "plaintls";
+        return "consulconnect";
     }
 
     @Override

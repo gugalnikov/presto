@@ -13,14 +13,23 @@
  */
 package io.prestosql.plugin.certificate.consulconnect;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.airlift.log.Logger;
 import io.prestosql.spi.security.AccessDeniedException;
 import io.prestosql.spi.security.CertificateAuthenticator;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
 
 import javax.inject.Inject;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
 
 public class ConsulConnectAuthenticator
         implements CertificateAuthenticator
@@ -29,6 +38,7 @@ public class ConsulConnectAuthenticator
     private static final String SPIFFE_PREFIX = "spiffe";
 
     private final boolean tlsEnabled;
+    HashMap<String, Object> auth;
 
     @Inject
     public ConsulConnectAuthenticator(ConsulConnectConfig serverConfig)
@@ -41,11 +51,36 @@ public class ConsulConnectAuthenticator
     {
         log.info("*** ConsulConnectAuthenticator...Authenticate *** " + this.tlsEnabled + " principal: " + certs[0].getSubjectX500Principal());
         String serialNumber = String.valueOf(certs[0].getSerialNumber());
-        System.out.println("*** Serial Number: " + serialNumber);
         String cert = certs[0].toString().trim();
-        String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + certs[0].getSubjectX500Principal().toString().split("=")[1];
-        System.out.println("Spiffe Id: " + spiffeId);
+        String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + "svc/" + certs[0].getSubjectX500Principal().toString().split("=")[1];
+        try {
+            this.auth = new ObjectMapper().readValue(this.authorize(serialNumber, spiffeId), HashMap.class);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (this.auth.get("Authorized").equals("true")) {
+            return certs[0].getSubjectX500Principal();
+        }
+        else {
+            throw new AccessDeniedException((String) this.auth.get("Reason"));
+        }
+    }
 
-        return certs[0].getSubjectX500Principal();
+    private String authorize(String serialNumber, String spiffeId) throws Exception
+    {
+        HttpPost post = new HttpPost("http://127.0.0.1:8500/v1/agent/connect/authorize");
+        String payload = "{" +
+                "\"Target\": \"presto\", " +
+                "\"ClientCertURI\": \"" + spiffeId + "\", " +
+                "\"ClientCertSerial\": \"" + serialNumber + "\"" +
+                "}";
+        StringEntity entity = new StringEntity(payload,
+                ContentType.APPLICATION_FORM_URLENCODED);
+        post.setEntity(entity);
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+                CloseableHttpResponse response = httpClient.execute(post)) {
+            return EntityUtils.toString(response.getEntity());
+        }
     }
 }

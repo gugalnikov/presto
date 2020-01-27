@@ -256,13 +256,16 @@ public class TestOrcPageSourceMemoryTracking
             throws Exception
     {
         int maxReadBytes = 1_000;
-        ConnectorSession session = new TestingConnectorSession(new HiveSessionProperties(
+        HiveSessionProperties hiveSessionProperties = new HiveSessionProperties(
                 new HiveConfig(),
                 new OrcReaderConfig()
                         .setMaxBlockSize(new DataSize(maxReadBytes, BYTE)),
                 new OrcWriterConfig(),
                 new ParquetReaderConfig(),
-                new ParquetWriterConfig()).getSessionProperties());
+                new ParquetWriterConfig());
+        ConnectorSession session = TestingConnectorSession.builder()
+                .setPropertyMetadata(hiveSessionProperties.getSessionProperties())
+                .build();
         FileFormatDataSourceStats stats = new FileFormatDataSourceStats();
 
         // Build a table where every row gets larger, so we can test that the "batchSize" reduces
@@ -476,8 +479,8 @@ public class TestOrcPageSourceMemoryTracking
         {
             OrcPageSourceFactory orcPageSourceFactory = new OrcPageSourceFactory(new OrcReaderOptions(), HDFS_ENVIRONMENT, stats);
             return HivePageSourceProvider.createHivePageSource(
-                    ImmutableSet.of(),
                     ImmutableSet.of(orcPageSourceFactory),
+                    ImmutableSet.of(),
                     new Configuration(false),
                     session,
                     fileSplit.getPath(),

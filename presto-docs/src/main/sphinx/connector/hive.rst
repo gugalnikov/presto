@@ -33,10 +33,12 @@ The following file types are supported for the Hive connector:
 * ORC
 * Parquet
 * Avro
-* RCFile
+* RCText (RCFile using ``ColumnarSerDe``)
+* RCBinary (RCFile using ``LazyBinaryColumnarSerDe``)
 * SequenceFile
-* JSON
-* Text
+* JSON (using ``org.apache.hive.hcatalog.data.JsonSerDe``)
+* CSV (using ``org.apache.hadoop.hive.serde2.OpenCSVSerde``)
+* TextFile
 
 Configuration
 -------------
@@ -143,6 +145,10 @@ Property Name                                      Description                  
                                                    partition locations. If disabled, subdirectories are
                                                    ignored. This is equivalent to the
                                                    ``hive.mapred.supports.subdirectories`` property in Hive.
+
+``hive.ignore-absent-partitions``                  Ignore partitions when the file system location does not     ``false``
+                                                   exist rather than failing the query. This skips data that
+                                                   may be expected to be part of the table.
 
 ``hive.storage-format``                            The default file format used when creating new tables.       ``ORC``
 
@@ -628,6 +634,11 @@ specify a subset of columns to be analyzed via the optional ``columns`` property
 This query collects statistics for columns ``col_1`` and ``col_2`` for the partition
 with keys ``p2_value1, p2_value2``.
 
+Note that if statistics were previously collected for all columns, they need to be dropped
+before re-analyzing just a subset::
+
+    CALL system.drop_stats(schema_name, table_name, ARRAY[ARRAY['p2_value1', 'p2_value2']])
+
 Schema Evolution
 ----------------
 
@@ -720,6 +731,13 @@ Procedures
     * ``DROP``: drop any partitions that exist in the metastore, but not on the file system.
     * ``FULL``: perform both ``ADD`` and ``DROP``.
 
+* ``system.drop_stats(schema_name, table_name, partition_values)``
+
+    Drops statistics for a subset of partitions or the entire table. The partitions are specified as an
+    array whose elements are arrays of partition values (similar to the ``partition_values`` argument in
+    ``create_empty_partition``). A null value for the ``partition_values`` argument indicates that stats
+    should be dropped for the entire table.
+
 Examples
 --------
 
@@ -764,6 +782,13 @@ Add an empty partition to the ``page_views`` table::
         schema_name => 'web',
         table_name => 'page_views',
         partition_columns => ARRAY['ds', 'country'],
+        partition_values => ARRAY['2016-08-09', 'US']);
+
+Drop stats for a partition of the ``page_views`` table::
+
+    CALL system.drop_stats(
+        schema_name => 'web',
+        table_name => 'page_views',
         partition_values => ARRAY['2016-08-09', 'US']);
 
 Query the ``page_views`` table::

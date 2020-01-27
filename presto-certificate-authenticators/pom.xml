@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.prestosql</groupId>
         <artifactId>presto-root</artifactId>
-        <version>328-SNAPSHOT</version>
+        <version>330-SNAPSHOT</version>
     </parent>
 
     <artifactId>presto-certificate-authenticators</artifactId>
@@ -31,11 +31,6 @@
             <groupId>io.airlift</groupId>
             <artifactId>log</artifactId>
         </dependency>
-
-       <!-- <dependency>
-            <groupId>io.airlift</groupId>
-            <artifactId>units</artifactId>
-        </dependency>-->
 
         <dependency>
             <groupId>com.google.guava</groupId>

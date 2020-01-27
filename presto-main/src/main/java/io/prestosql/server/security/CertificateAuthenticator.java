@@ -14,17 +14,12 @@
 package io.prestosql.server.security;
 
 import io.airlift.log.Logger;
-import io.prestosql.spi.security.AccessDeniedException;
 
 import javax.inject.Inject;
-import javax.inject.Inject;
-import javax.security.auth.x500.X500Principal;
 import javax.servlet.http.HttpServletRequest;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
-
-import static java.util.Objects.requireNonNull;
 
 import static io.prestosql.server.security.UserExtraction.createUserExtraction;
 import static java.util.Objects.requireNonNull;
@@ -36,22 +31,15 @@ public class CertificateAuthenticator
     private static final Logger log = Logger.get(CertificateAuthenticator.class);
 
     private final CertificateAuthenticatorManager authenticatorManager;
-    private Principal principal;
-
-    @Inject
-    public CertificateAuthenticator(CertificateAuthenticatorManager authenticatorManager)
-    {
-        this.authenticatorManager = requireNonNull(authenticatorManager, "authenticatorManager is null");
-        authenticatorManager.setRequired();
-    }
-
     private final UserExtraction userExtraction;
 
     @Inject
-    public CertificateAuthenticator(CertificateConfig config)
+    public CertificateAuthenticator(CertificateAuthenticatorManager authenticatorManager, CertificateConfig config)
     {
         requireNonNull(config, "config is null");
         this.userExtraction = createUserExtraction(config.getUserExtractionPattern(), config.getUserExtractionFile());
+        this.authenticatorManager = requireNonNull(authenticatorManager, "authenticatorManager is null");
+        authenticatorManager.setRequired();
     }
 
     @Override
@@ -64,7 +52,7 @@ public class CertificateAuthenticator
         }
 
         try {
-            principal = authenticatorManager.getAuthenticator().authenticate(certs);
+            Principal principal = authenticatorManager.getAuthenticator().authenticate(certs);
             String authenticatedUser = userExtraction.extractUser(principal.toString());
             return new AuthenticatedPrincipal(authenticatedUser, principal);
         }

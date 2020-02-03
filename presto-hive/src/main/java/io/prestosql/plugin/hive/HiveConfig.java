@@ -66,8 +66,10 @@ public class HiveConfig
     private DataSize writerSortBufferSize = new DataSize(64, MEGABYTE);
     private boolean forceLocalScheduling;
     private boolean recursiveDirWalkerEnabled;
+    private boolean ignoreAbsentPartitions;
 
     private int maxConcurrentFileRenames = 20;
+    private int maxConcurrentMetastoreDrops = 20;
 
     private boolean allowCorruptWritesForTesting;
 
@@ -229,6 +231,19 @@ public class HiveConfig
         return this;
     }
 
+    @Min(1)
+    public int getMaxConcurrentMetastoreDrops()
+    {
+        return maxConcurrentMetastoreDrops;
+    }
+
+    @Config("hive.max-concurrent-metastore-drops")
+    public HiveConfig setMaxConcurrentMetastoreDrops(int maxConcurrentMetastoreDeletes)
+    {
+        this.maxConcurrentMetastoreDrops = maxConcurrentMetastoreDeletes;
+        return this;
+    }
+
     @Config("hive.recursive-directories")
     public HiveConfig setRecursiveDirWalkerEnabled(boolean recursiveDirWalkerEnabled)
     {
@@ -239,6 +254,18 @@ public class HiveConfig
     public boolean getRecursiveDirWalkerEnabled()
     {
         return recursiveDirWalkerEnabled;
+    }
+
+    public boolean isIgnoreAbsentPartitions()
+    {
+        return ignoreAbsentPartitions;
+    }
+
+    @Config("hive.ignore-absent-partitions")
+    public HiveConfig setIgnoreAbsentPartitions(boolean ignoreAbsentPartitions)
+    {
+        this.ignoreAbsentPartitions = ignoreAbsentPartitions;
+        return this;
     }
 
     public DateTimeZone getDateTimeZone()

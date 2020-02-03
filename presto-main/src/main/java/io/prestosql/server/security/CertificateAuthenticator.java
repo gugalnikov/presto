@@ -14,7 +14,6 @@
 package io.prestosql.server.security;
 
 import io.airlift.log.Logger;
-import io.prestosql.spi.security.AccessDeniedException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +21,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 
+import static io.prestosql.server.security.UserExtraction.createUserExtraction;
 import static java.util.Objects.requireNonNull;
 
 public class CertificateAuthenticator
@@ -31,16 +31,19 @@ public class CertificateAuthenticator
     private static final Logger log = Logger.get(CertificateAuthenticator.class);
 
     private final CertificateAuthenticatorManager authenticatorManager;
+    private final UserExtraction userExtraction;
 
     @Inject
-    public CertificateAuthenticator(CertificateAuthenticatorManager authenticatorManager)
+    public CertificateAuthenticator(CertificateAuthenticatorManager authenticatorManager, CertificateConfig config)
     {
+        requireNonNull(config, "config is null");
+        this.userExtraction = createUserExtraction(config.getUserExtractionPattern(), config.getUserExtractionFile());
         this.authenticatorManager = requireNonNull(authenticatorManager, "authenticatorManager is null");
         authenticatorManager.setRequired();
     }
 
     @Override
-    public Principal authenticate(HttpServletRequest request)
+    public AuthenticatedPrincipal authenticate(HttpServletRequest request)
             throws AuthenticationException
     {
         X509Certificate[] certs = (X509Certificate[]) request.getAttribute(X509_ATTRIBUTE);
@@ -49,19 +52,16 @@ public class CertificateAuthenticator
         }
 
         try {
-            return authenticatorManager.getAuthenticator().authenticate(certs);
+            Principal principal = authenticatorManager.getAuthenticator().authenticate(certs);
+            String authenticatedUser = userExtraction.extractUser(principal.toString());
+            return new AuthenticatedPrincipal(authenticatedUser, principal);
         }
-        catch (AccessDeniedException e) {
-            throw needAuthentication(e.getMessage());
+        catch (UserExtractionException e) {
+            throw new AuthenticationException(e.getMessage());
         }
         catch (RuntimeException e) {
             log.debug("CertificateAuthenticator plugin hasn't been loaded yet...");
             return null;
         }
-    }
-
-    private static AuthenticationException needAuthentication(String message)
-    {
-        return new AuthenticationException(message, "Basic realm=\"Presto\"");
     }
 }

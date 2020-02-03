@@ -89,8 +89,9 @@ public class TestRaptorMetadata
 {
     private static final SchemaTableName DEFAULT_TEST_ORDERS = new SchemaTableName("test", "orders");
     private static final SchemaTableName DEFAULT_TEST_LINEITEMS = new SchemaTableName("test", "lineitems");
-    private static final ConnectorSession SESSION = new TestingConnectorSession(
-            new RaptorSessionProperties(new StorageManagerConfig()).getSessionProperties());
+    private static final ConnectorSession SESSION = TestingConnectorSession.builder()
+            .setPropertyMetadata(new RaptorSessionProperties(new StorageManagerConfig()).getSessionProperties())
+            .build();
 
     private DBI dbi;
     private Handle dummyHandle;
@@ -840,6 +841,7 @@ public class TestRaptorMetadata
                 Optional.empty(),
                 Optional.empty(),
                 ImmutableList.of(new ViewColumn("test", BIGINT.getTypeId())),
+                Optional.empty(),
                 Optional.empty(),
                 true);
     }

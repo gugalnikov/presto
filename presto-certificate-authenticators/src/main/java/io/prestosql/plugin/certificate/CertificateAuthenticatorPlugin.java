@@ -14,7 +14,6 @@
 package io.prestosql.plugin.certificate;
 
 import com.google.common.collect.ImmutableList;
-import io.prestosql.plugin.certificate.consulconnect.ConsulConnectAuthenticatorFactory;
 import io.prestosql.plugin.certificate.plaintls.PlainTlsAuthenticatorFactory;
 import io.prestosql.spi.Plugin;
 import io.prestosql.spi.security.CertificateAuthenticatorFactory;
@@ -27,7 +26,6 @@ public class CertificateAuthenticatorPlugin
     {
         return ImmutableList.<CertificateAuthenticatorFactory>builder()
                 .add(new PlainTlsAuthenticatorFactory())
-                .add(new ConsulConnectAuthenticatorFactory())
                 .build();
     }
 }

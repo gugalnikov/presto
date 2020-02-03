@@ -73,9 +73,9 @@ import static io.prestosql.plugin.hive.BackgroundHiveSplitLoader.BucketSplitInfo
 import static io.prestosql.plugin.hive.BackgroundHiveSplitLoader.getBucketNumber;
 import static io.prestosql.plugin.hive.HiveColumnHandle.pathColumnHandle;
 import static io.prestosql.plugin.hive.HiveStorageFormat.CSV;
+import static io.prestosql.plugin.hive.HiveTestUtils.HDFS_ENVIRONMENT;
 import static io.prestosql.plugin.hive.HiveTestUtils.SESSION;
 import static io.prestosql.plugin.hive.HiveTestUtils.TYPE_MANAGER;
-import static io.prestosql.plugin.hive.HiveTestUtils.createTestHdfsEnvironment;
 import static io.prestosql.plugin.hive.HiveTestUtils.getHiveSession;
 import static io.prestosql.plugin.hive.HiveType.HIVE_INT;
 import static io.prestosql.plugin.hive.HiveType.HIVE_STRING;
@@ -351,6 +351,7 @@ public class TestBackgroundHiveSplitLoader
                 EXECUTOR,
                 threads,
                 false,
+                false,
                 Optional.empty());
 
         HiveSplitSource hiveSplitSource = hiveSplitSource(backgroundHiveSplitLoader);
@@ -410,7 +411,7 @@ public class TestBackgroundHiveSplitLoader
             String validWriteIdsList = format("4$%s.%s:3:9223372036854775807::2", table.getDatabaseName(), table.getTableName());
 
             BackgroundHiveSplitLoader backgroundHiveSplitLoader = backgroundHiveSplitLoader(
-                    createTestHdfsEnvironment(),
+                    HDFS_ENVIRONMENT,
                     TupleDomain.none(),
                     Optional.empty(),
                     table,
@@ -521,6 +522,7 @@ public class TestBackgroundHiveSplitLoader
                 EXECUTOR,
                 2,
                 false,
+                false,
                 validWriteIds);
     }
 
@@ -547,6 +549,7 @@ public class TestBackgroundHiveSplitLoader
                 EXECUTOR,
                 2,
                 false,
+                false,
                 Optional.empty());
     }
 
@@ -566,6 +569,7 @@ public class TestBackgroundHiveSplitLoader
                 new CachingDirectoryLister(new HiveConfig()),
                 directExecutor(),
                 2,
+                false,
                 false,
                 Optional.empty());
     }

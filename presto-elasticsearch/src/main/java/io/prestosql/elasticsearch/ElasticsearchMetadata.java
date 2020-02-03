@@ -33,6 +33,7 @@ import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.connector.SchemaTablePrefix;
 import io.prestosql.spi.predicate.Domain;
 import io.prestosql.spi.predicate.TupleDomain;
+import io.prestosql.spi.type.ArrayType;
 import io.prestosql.spi.type.RowType;
 import io.prestosql.spi.type.Type;
 
@@ -43,7 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.ImmutableMap.toImmutableMap;
 import static io.prestosql.spi.type.BigintType.BIGINT;
 import static io.prestosql.spi.type.BooleanType.BOOLEAN;
@@ -128,7 +128,7 @@ public class ElasticsearchMetadata
         result.add(BuiltinColumns.SCORE.getMetadata());
 
         for (IndexMetadata.Field field : metadata.getSchema().getFields()) {
-            Type type = toPrestoType(field.getType());
+            Type type = toPrestoType(field);
             if (type == null) {
                 continue;
             }
@@ -162,9 +162,19 @@ public class ElasticsearchMetadata
         return false;
     }
 
-    private Type toPrestoType(IndexMetadata.Type type)
+    private Type toPrestoType(IndexMetadata.Field metaDataField)
     {
-        if (type instanceof PrimitiveType) {
+        return toPrestoType(metaDataField, metaDataField.isArray());
+    }
+
+    private Type toPrestoType(IndexMetadata.Field metaDataField, boolean isArray)
+    {
+        IndexMetadata.Type type = metaDataField.getType();
+        if (isArray) {
+            Type elementType = toPrestoType(metaDataField, false);
+            return new ArrayType(elementType);
+        }
+        else if (type instanceof PrimitiveType) {
             switch (((PrimitiveType) type).getName()) {
                 case "float":
                     return REAL;
@@ -197,11 +207,21 @@ public class ElasticsearchMetadata
         else if (type instanceof ObjectType) {
             ObjectType objectType = (ObjectType) type;
 
-            List<RowType.Field> fields = objectType.getFields().stream()
-                    .map(field -> RowType.field(field.getName(), toPrestoType(field.getType())))
-                    .collect(toImmutableList());
+            ImmutableList.Builder<RowType.Field> builder = ImmutableList.builder();
+            for (IndexMetadata.Field field : objectType.getFields()) {
+                Type prestoType = toPrestoType(field);
+                if (prestoType != null) {
+                    builder.add(RowType.field(field.getName(), prestoType));
+                }
+            }
 
-            return RowType.from(fields);
+            List<RowType.Field> fields = builder.build();
+
+            if (!fields.isEmpty()) {
+                return RowType.from(fields);
+            }
+
+            // otherwise, skip -- row types must have at least 1 field
         }
 
         return null;
@@ -214,9 +234,17 @@ public class ElasticsearchMetadata
             return ImmutableList.of();
         }
 
-        return client.getIndexes().stream()
+        ImmutableList.Builder<SchemaTableName> result = ImmutableList.builder();
+
+        client.getIndexes().stream()
                 .map(index -> new SchemaTableName(this.schemaName, index))
-                .collect(toImmutableList());
+                .forEach(result::add);
+
+        client.getAliases().stream()
+                .map(index -> new SchemaTableName(this.schemaName, index))
+                .forEach(result::add);
+
+        return result.build();
     }
 
     @Override

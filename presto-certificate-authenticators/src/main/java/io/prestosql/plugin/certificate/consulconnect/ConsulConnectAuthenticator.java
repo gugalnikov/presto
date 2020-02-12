@@ -38,12 +38,14 @@ public class ConsulConnectAuthenticator
     private static final String SPIFFE_PREFIX = "spiffe";
 
     private final boolean tlsEnabled;
+    private final String target;
     HashMap<String, Object> auth;
 
     @Inject
     public ConsulConnectAuthenticator(ConsulConnectConfig serverConfig)
     {
         this.tlsEnabled = serverConfig.getTlsEnabled();
+        this.target = serverConfig.getServicename();
     }
 
     @Override
@@ -71,7 +73,7 @@ public class ConsulConnectAuthenticator
     {
         HttpPost post = new HttpPost("http://127.0.0.1:8500/v1/agent/connect/authorize");
         String payload = "{" +
-                "\"Target\": \"presto\", " +
+                "\"Target\": \"" + this.target + "\", " +
                 "\"ClientCertURI\": \"" + spiffeId + "\", " +
                 "\"ClientCertSerial\": \"" + serialNumber + "\"" +
                 "}";

@@ -14,6 +14,7 @@
 package io.prestosql.server.security;
 
 import io.airlift.log.Logger;
+import io.prestosql.spi.security.AccessDeniedException;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -58,6 +59,10 @@ public class CertificateAuthenticator
         }
         catch (UserExtractionException e) {
             throw new AuthenticationException(e.getMessage());
+        }
+        catch (AccessDeniedException e) {
+            log.error("Access denied..." + e.getMessage());
+            return null;
         }
         catch (RuntimeException e) {
             log.debug("CertificateAuthenticator plugin hasn't been loaded yet...");

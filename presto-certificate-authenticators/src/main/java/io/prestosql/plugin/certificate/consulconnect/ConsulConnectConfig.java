@@ -21,6 +21,7 @@ import javax.validation.constraints.NotNull;
 public class ConsulConnectConfig
 {
     private boolean tlsenabled;
+    private String servicename;
 
     @NotNull
     public boolean getTlsEnabled()
@@ -33,5 +34,18 @@ public class ConsulConnectConfig
     public void setTlsEnabled(boolean tlsEnabled)
     {
         this.tlsenabled = tlsEnabled;
+    }
+
+    @NotNull
+    public String getServicename()
+    {
+        return this.servicename;
+    }
+
+    @Config("consul.servicename")
+    @ConfigDescription("Custom config")
+    public void setServicename(String servicename)
+    {
+        this.servicename = servicename;
     }
 }

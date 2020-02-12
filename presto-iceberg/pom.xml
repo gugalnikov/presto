@@ -14,8 +14,8 @@
 
     <properties>
         <air.main.basedir>${project.parent.basedir}</air.main.basedir>
-        <dep.iceberg.groupId>com.github.apache.incubator-iceberg</dep.iceberg.groupId>
-        <dep.iceberg.version>77a456a</dep.iceberg.version>
+        <dep.iceberg.groupId>org.apache.iceberg</dep.iceberg.groupId>
+        <dep.iceberg.version>0.7.0-incubating</dep.iceberg.version>
     </properties>
 
     <repositories>

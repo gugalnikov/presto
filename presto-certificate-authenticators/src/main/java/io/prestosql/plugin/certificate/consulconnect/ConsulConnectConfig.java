@@ -22,6 +22,7 @@ public class ConsulConnectConfig
 {
     private boolean tlsenabled;
     private String servicename;
+    private String consulHttpAddr;
 
     @NotNull
     public boolean getTlsEnabled()
@@ -47,5 +48,18 @@ public class ConsulConnectConfig
     public void setServicename(String servicename)
     {
         this.servicename = servicename;
+    }
+
+    @NotNull
+    public String getConsulHttpAddr()
+    {
+        return this.consulHttpAddr;
+    }
+
+    @Config("consul.http_addr")
+    @ConfigDescription("Custom config")
+    public void setConsulHttpAddr(String consulHttpAddr)
+    {
+        this.consulHttpAddr = consulHttpAddr;
     }
 }

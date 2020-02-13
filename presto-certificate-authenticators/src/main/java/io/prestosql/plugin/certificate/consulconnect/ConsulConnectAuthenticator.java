@@ -38,6 +38,7 @@ public class ConsulConnectAuthenticator
     private static final String SPIFFE_PREFIX = "spiffe";
 
     private final boolean tlsEnabled;
+    private final String consulHttpAddr;
     private final String target;
     HashMap<String, Object> auth;
 
@@ -45,6 +46,7 @@ public class ConsulConnectAuthenticator
     public ConsulConnectAuthenticator(ConsulConnectConfig serverConfig)
     {
         this.tlsEnabled = serverConfig.getTlsEnabled();
+        this.consulHttpAddr = serverConfig.getConsulHttpAddr();
         this.target = serverConfig.getServicename();
     }
 
@@ -71,7 +73,7 @@ public class ConsulConnectAuthenticator
 
     private String authorize(String serialNumber, String spiffeId) throws Exception
     {
-        HttpPost post = new HttpPost("http://127.0.0.1:8500/v1/agent/connect/authorize");
+        HttpPost post = new HttpPost(consulHttpAddr + "/v1/agent/connect/authorize");
         String payload = "{" +
                 "\"Target\": \"" + this.target + "\", " +
                 "\"ClientCertURI\": \"" + spiffeId + "\", " +

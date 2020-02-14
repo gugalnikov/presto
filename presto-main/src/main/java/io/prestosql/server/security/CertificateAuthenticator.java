@@ -57,12 +57,8 @@ public class CertificateAuthenticator
             String authenticatedUser = userExtraction.extractUser(principal.toString());
             return new AuthenticatedPrincipal(authenticatedUser, principal);
         }
-        catch (UserExtractionException e) {
+        catch (UserExtractionException | AccessDeniedException e) {
             throw new AuthenticationException(e.getMessage());
-        }
-        catch (AccessDeniedException e) {
-            log.error("Access denied..." + e.getMessage());
-            return null;
         }
         catch (RuntimeException e) {
             log.debug("CertificateAuthenticator plugin hasn't been loaded yet...");

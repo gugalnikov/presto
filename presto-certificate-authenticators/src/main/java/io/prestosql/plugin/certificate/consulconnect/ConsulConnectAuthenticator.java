@@ -18,7 +18,8 @@ import io.airlift.log.Logger;
 import io.prestosql.spi.security.AccessDeniedException;
 import io.prestosql.spi.security.CertificateAuthenticator;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -38,22 +39,24 @@ public class ConsulConnectAuthenticator
     private static final String SPIFFE_PREFIX = "spiffe";
 
     private final boolean tlsEnabled;
-    private final String consulHttpAddr;
-    private final String target;
+    private final String consulAddr;
+    private final String consulToken;
+    private final String consulService;
     HashMap<String, Object> auth;
 
     @Inject
     public ConsulConnectAuthenticator(ConsulConnectConfig serverConfig)
     {
         this.tlsEnabled = serverConfig.getTlsEnabled();
-        this.consulHttpAddr = serverConfig.getConsulHttpAddr();
-        this.target = serverConfig.getServicename();
+        this.consulAddr = serverConfig.getConsulAddr();
+        this.consulService = serverConfig.getConsulService();
+        this.consulToken = serverConfig.getConsulToken();
     }
 
     @Override
     public Principal authenticate(X509Certificate[] certs) throws AccessDeniedException
     {
-        log.info("*** ConsulConnectAuthenticator...Authenticate *** " + this.tlsEnabled + " principal: " + certs[0].getSubjectX500Principal());
+        log.info("Authenticating using principal: " + certs[0].getSubjectX500Principal());
         String serialNumber = String.valueOf(certs[0].getSerialNumber());
         String cert = certs[0].toString().trim();
         String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + "svc/" + certs[0].getSubjectX500Principal().toString().split("=")[1];
@@ -63,7 +66,8 @@ public class ConsulConnectAuthenticator
         catch (Exception e) {
             e.printStackTrace();
         }
-        if (this.auth.get("Authorized").equals("true")) {
+        log.debug("auth object:" + auth.toString());
+        if (this.auth.get("Authorized").equals(true)) {
             return certs[0].getSubjectX500Principal();
         }
         else {
@@ -73,17 +77,16 @@ public class ConsulConnectAuthenticator
 
     private String authorize(String serialNumber, String spiffeId) throws Exception
     {
-        HttpPost post = new HttpPost(consulHttpAddr + "/v1/agent/connect/authorize");
-        String payload = "{" +
-                "\"Target\": \"" + this.target + "\", " +
-                "\"ClientCertURI\": \"" + spiffeId + "\", " +
-                "\"ClientCertSerial\": \"" + serialNumber + "\"" +
-                "}";
-        StringEntity entity = new StringEntity(payload,
-                ContentType.APPLICATION_FORM_URLENCODED);
-        post.setEntity(entity);
+        HttpUriRequest request = RequestBuilder.post()
+                .setUri(consulAddr + "/v1/agent/connect/authorize")
+                .setHeader("X-Consul-Token", consulToken)
+                .setEntity(new StringEntity(String.valueOf(new ObjectMapper().createObjectNode()
+                        .put("Target", consulService)
+                        .put("ClientCertURI", spiffeId)
+                        .put("ClientCertSerial", serialNumber)), ContentType.APPLICATION_JSON))
+                .build();
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
-                CloseableHttpResponse response = httpClient.execute(post)) {
+                CloseableHttpResponse response = httpClient.execute(request)) {
             return EntityUtils.toString(response.getEntity());
         }
     }

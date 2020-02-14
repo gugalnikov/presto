@@ -21,8 +21,9 @@ import javax.validation.constraints.NotNull;
 public class ConsulConnectConfig
 {
     private boolean tlsenabled;
-    private String servicename;
-    private String consulHttpAddr;
+    private String consulService;
+    private String consulAddr;
+    private String consulToken;
 
     @NotNull
     public boolean getTlsEnabled()
@@ -31,35 +32,47 @@ public class ConsulConnectConfig
     }
 
     @Config("plaintls.enabled")
-    @ConfigDescription("Custom config")
+    @ConfigDescription("Enable consul connect mTLS authentication and authorization")
     public void setTlsEnabled(boolean tlsEnabled)
     {
         this.tlsenabled = tlsEnabled;
     }
 
     @NotNull
-    public String getServicename()
+    public String getConsulService()
     {
-        return this.servicename;
+        return this.consulService;
     }
 
-    @Config("consul.servicename")
-    @ConfigDescription("Custom config")
-    public void setServicename(String servicename)
+    @Config("consul.service")
+    @ConfigDescription("Consul service")
+    public void setConsulService(String consulService)
     {
-        this.servicename = servicename;
+        this.consulService = consulService;
     }
 
     @NotNull
-    public String getConsulHttpAddr()
+    public String getConsulAddr()
     {
-        return this.consulHttpAddr;
+        return this.consulAddr;
     }
 
-    @Config("consul.http_addr")
-    @ConfigDescription("Custom config")
-    public void setConsulHttpAddr(String consulHttpAddr)
+    @Config("consul.addr")
+    @ConfigDescription("Consul http address")
+    public void setConsulAddr(String consulAddr)
     {
-        this.consulHttpAddr = consulHttpAddr;
+        this.consulAddr = consulAddr;
+    }
+
+    public String getConsulToken()
+    {
+        return this.consulToken;
+    }
+
+    @Config("consul.token")
+    @ConfigDescription("Consul ACL token")
+    public void setConsulToken(String consulToken)
+    {
+        this.consulToken = consulToken;
     }
 }

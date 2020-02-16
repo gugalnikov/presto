@@ -18,6 +18,8 @@ import io.airlift.configuration.ConfigDescription;
 
 import javax.validation.constraints.NotNull;
 
+import java.util.Optional;
+
 public class ConsulConnectConfig
 {
     private String consulAddr = "http://127.0.0.1:8500";
@@ -27,11 +29,11 @@ public class ConsulConnectConfig
     @NotNull
     public String getConsulService()
     {
-        return this.consulService;
+        return Optional.ofNullable(System.getenv("CONSUL_SERVICE")).orElse(this.consulService);
     }
 
     @Config("consul.service")
-    @ConfigDescription("Consul service for this presto instance")
+    @ConfigDescription("Consul service for this presto instance [ env: CONSUL_SERVICE ]")
     public void setConsulService(String consulService)
     {
         this.consulService = consulService;
@@ -40,11 +42,11 @@ public class ConsulConnectConfig
     @NotNull
     public String getConsulAddr()
     {
-        return this.consulAddr;
+        return Optional.ofNullable(System.getenv("CONSUL_HTTP_ADDR")).orElse(this.consulAddr);
     }
 
     @Config("consul.addr")
-    @ConfigDescription("Consul address")
+    @ConfigDescription("Consul address [ env: CONSUL_HTTP_ADDR ]")
     public void setConsulAddr(String consulAddr)
     {
         this.consulAddr = consulAddr;
@@ -52,11 +54,11 @@ public class ConsulConnectConfig
 
     public String getConsulToken()
     {
-        return this.consulToken;
+        return Optional.ofNullable(System.getenv("CONSUL_TOKEN")).orElse(this.consulToken);
     }
 
     @Config("consul.token")
-    @ConfigDescription("Consul ACL token")
+    @ConfigDescription("Consul ACL token [ env: CONSUL_TOKEN ]")
     public void setConsulToken(String consulToken)
     {
         this.consulToken = consulToken;

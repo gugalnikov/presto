@@ -1,0 +1,14 @@
+#! /bin/bash
+echo "creating p12..."
+openssl pkcs12 -export -password pass:changeit -in /lib/presto/default/etc/connect/leaf.pem -inkey /lib/presto/default/etc/connect/leaf.key -certfile /lib/presto/default/etc/connect/leaf.pem -out /lib/presto/default/etc/connect/presto.p12
+
+echo "importing p12 into jks..."
+keytool -noprompt -importkeystore -srckeystore /lib/presto/default/etc/connect/presto.p12 -srcstoretype pkcs12 -destkeystore /lib/presto/default/etc/connect/presto.jks -deststoretype JKS -deststorepass changeit -srcstorepass changeit
+
+echo "adding root to jks..."
+keytool -noprompt -import -trustcacerts -keystore /lib/presto/default/etc/connect/presto.jks -storepass changeit -alias Root -file /lib/presto/default/etc/connect/roots.pem
+
+echo "jks to pkcs12 format..."
+keytool -noprompt -importkeystore -srckeystore /lib/presto/default/etc/connect/presto.jks -destkeystore /lib/presto/default/etc/connect/presto.jks -deststoretype pkcs12 -deststorepass changeit -srcstorepass changeit
+
+/usr/lib/presto/bin/launcher run ${NODE_ID} "$@"

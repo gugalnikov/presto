@@ -18,7 +18,7 @@ ENV JAVA_HOME /usr/lib/jvm/java-11
 RUN \
     set -xeu && \
     yum -y -q update && \
-    yum -y -q install java-11-openjdk-devel less openssl && \
+    yum -y -q install java-11-openjdk-devel less && \
     yum -q clean all && \
     rm -rf /var/cache/yum && \
     rm -rf /tmp/* /var/tmp/* && \
@@ -30,7 +30,6 @@ RUN \
 ARG PRESTO_VERSION
 COPY presto-cli-${PRESTO_VERSION}-executable.jar /usr/bin/presto
 COPY --chown=presto:presto presto-server-${PRESTO_VERSION} /usr/lib/presto
-COPY --chown=presto:presto --from=hashicorp/consul-template:0.24.1-light "/bin/consul-template" "/usr/local/bin/consul-template"
 
 EXPOSE 8080
 USER presto:presto

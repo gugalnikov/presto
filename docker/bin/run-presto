@@ -20,16 +20,4 @@ if [[ ${NODE_ID_EXISTS} != 0 ]] ; then
     NODE_ID="-Dnode.id=${HOSTNAME}"
 fi
 
-#export CONSUL_TOKEN=$(grep -s 'consul.token' /usr/lib/presto/etc/certificate-authenticator.properties | cut -f2 -d =)
-
-if [[ -z ${CONSUL_TEMPLATE+x} ]]
-then
-    exec /usr/lib/presto/bin/launcher run ${NODE_ID} "$@"
-else
-    chmod +x /usr/lib/presto/bin/consul-template-wrapper
-    consul-template \
-    -template "/lib/presto/default/etc/connect/leaf.pem.ctmpl:/lib/presto/default/etc/connect/leaf.pem" \
-    -template "/lib/presto/default/etc/connect/leaf.key.ctmpl:/lib/presto/default/etc/connect/leaf.key" \
-    -template "/lib/presto/default/etc/connect/roots.pem.ctmpl:/lib/presto/default/etc/connect/roots.pem" \
-    -exec "/usr/lib/presto/bin/consul-template-wrapper"
-fi
+exec /usr/lib/presto/bin/launcher run ${NODE_ID} "$@"

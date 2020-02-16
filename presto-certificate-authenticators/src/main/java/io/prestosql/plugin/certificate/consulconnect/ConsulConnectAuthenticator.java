@@ -38,7 +38,6 @@ public class ConsulConnectAuthenticator
     private static final Logger log = Logger.get(ConsulConnectAuthenticator.class);
     private static final String SPIFFE_PREFIX = "spiffe";
 
-    private final boolean tlsEnabled;
     private final String consulAddr;
     private final String consulToken;
     private final String consulService;
@@ -47,7 +46,6 @@ public class ConsulConnectAuthenticator
     @Inject
     public ConsulConnectAuthenticator(ConsulConnectConfig serverConfig)
     {
-        this.tlsEnabled = serverConfig.getTlsEnabled();
         this.consulAddr = serverConfig.getConsulAddr();
         this.consulService = serverConfig.getConsulService();
         this.consulToken = serverConfig.getConsulToken();
@@ -56,7 +54,7 @@ public class ConsulConnectAuthenticator
     @Override
     public Principal authenticate(X509Certificate[] certs) throws AccessDeniedException
     {
-        log.info("Authenticating using principal: " + certs[0].getSubjectX500Principal());
+        log.debug("principal: " + certs[0].getSubjectX500Principal());
         String serialNumber = String.valueOf(certs[0].getSerialNumber());
         String cert = certs[0].toString().trim();
         String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + "svc/" + certs[0].getSubjectX500Principal().toString().split("=")[1];
@@ -66,7 +64,7 @@ public class ConsulConnectAuthenticator
         catch (Exception e) {
             e.printStackTrace();
         }
-        log.debug("auth object:" + auth.toString());
+        log.debug("response:" + auth.toString());
         if (this.auth.get("Authorized").equals(true)) {
             return certs[0].getSubjectX500Principal();
         }
@@ -85,6 +83,7 @@ public class ConsulConnectAuthenticator
                         .put("ClientCertURI", spiffeId)
                         .put("ClientCertSerial", serialNumber)), ContentType.APPLICATION_JSON))
                 .build();
+        log.debug("request:" + request.toString());
         try (CloseableHttpClient httpClient = HttpClients.createDefault();
                 CloseableHttpResponse response = httpClient.execute(request)) {
             return EntityUtils.toString(response.getEntity());

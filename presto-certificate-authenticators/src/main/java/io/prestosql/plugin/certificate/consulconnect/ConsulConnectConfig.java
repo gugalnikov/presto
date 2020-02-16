@@ -20,23 +20,9 @@ import javax.validation.constraints.NotNull;
 
 public class ConsulConnectConfig
 {
-    private boolean tlsenabled;
+    private String consulAddr = "http://127.0.0.1:8500";
+    private String consulToken = "";
     private String consulService;
-    private String consulAddr;
-    private String consulToken;
-
-    @NotNull
-    public boolean getTlsEnabled()
-    {
-        return true;
-    }
-
-    @Config("plaintls.enabled")
-    @ConfigDescription("Enable consul connect mTLS authentication and authorization")
-    public void setTlsEnabled(boolean tlsEnabled)
-    {
-        this.tlsenabled = tlsEnabled;
-    }
 
     @NotNull
     public String getConsulService()
@@ -45,7 +31,7 @@ public class ConsulConnectConfig
     }
 
     @Config("consul.service")
-    @ConfigDescription("Consul service")
+    @ConfigDescription("Consul service for this presto instance")
     public void setConsulService(String consulService)
     {
         this.consulService = consulService;
@@ -58,7 +44,7 @@ public class ConsulConnectConfig
     }
 
     @Config("consul.addr")
-    @ConfigDescription("Consul http address")
+    @ConfigDescription("Consul address")
     public void setConsulAddr(String consulAddr)
     {
         this.consulAddr = consulAddr;

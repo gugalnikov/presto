@@ -108,6 +108,7 @@ import io.prestosql.server.PluginManager;
 import io.prestosql.server.PluginManagerConfig;
 import io.prestosql.server.ServerConfig;
 import io.prestosql.server.SessionPropertyDefaults;
+import io.prestosql.server.security.CertificateAuthenticatorManager;
 import io.prestosql.server.security.PasswordAuthenticatorManager;
 import io.prestosql.spi.PageIndexerFactory;
 import io.prestosql.spi.PageSorter;
@@ -369,6 +370,7 @@ public class LocalQueryRunner
                 new NoOpResourceGroupManager(),
                 accessControl,
                 new PasswordAuthenticatorManager(),
+                new CertificateAuthenticatorManager(),
                 eventListenerManager,
                 new GroupProviderManager(),
                 new SessionPropertyDefaults(nodeInfo));

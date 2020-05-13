@@ -21,8 +21,6 @@ import io.prestosql.spi.security.CertificateAuthenticatorFactory;
 
 import java.util.Map;
 
-import static io.airlift.configuration.ConfigBinder.configBinder;
-
 public class StandardCertificateAuthenticatorFactory
         implements CertificateAuthenticatorFactory
 {
@@ -37,7 +35,6 @@ public class StandardCertificateAuthenticatorFactory
     {
         Bootstrap app = new Bootstrap(
                 binder -> {
-                    configBinder(binder).bindConfig(StandardCertificateConfig.class);
                     binder.bind(StandardCertificateAuthenticator.class).in(Scopes.SINGLETON);
                 });
 

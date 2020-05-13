@@ -20,6 +20,7 @@ import javax.inject.Inject;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 public class StandardCertificateAuthenticator
         implements CertificateAuthenticator
@@ -27,14 +28,14 @@ public class StandardCertificateAuthenticator
     private final String name;
 
     @Inject
-    public StandardCertificateAuthenticator(StandardCertificateConfig serverConfig)
+    public StandardCertificateAuthenticator()
     {
-        this.name = serverConfig.getName();
+        this.name = "standard";
     }
 
     @Override
-    public Principal authenticate(X509Certificate[] certs) throws AccessDeniedException
+    public Principal authenticate(List<X509Certificate> certificates) throws AccessDeniedException
     {
-        return certs[0].getSubjectX500Principal();
+        return certificates.get(0).getSubjectX500Principal();
     }
 }

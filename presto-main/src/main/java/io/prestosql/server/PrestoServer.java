@@ -22,7 +22,7 @@ import io.airlift.bootstrap.Bootstrap;
 import io.airlift.discovery.client.Announcer;
 import io.airlift.discovery.client.DiscoveryModule;
 import io.airlift.discovery.client.ServiceAnnouncement;
-import io.airlift.event.client.HttpEventModule;
+import io.airlift.event.client.EventModule;
 import io.airlift.event.client.JsonEventModule;
 import io.airlift.http.server.HttpServerModule;
 import io.airlift.jaxrs.JaxrsModule;
@@ -43,8 +43,8 @@ import io.prestosql.metadata.CatalogManager;
 import io.prestosql.metadata.StaticCatalogStore;
 import io.prestosql.security.AccessControlManager;
 import io.prestosql.security.AccessControlModule;
-import io.prestosql.server.security.CertificateAuthenticatorManager;
 import io.prestosql.security.GroupProviderManager;
+import io.prestosql.server.security.CertificateAuthenticatorManager;
 import io.prestosql.server.security.PasswordAuthenticatorManager;
 import io.prestosql.server.security.ServerSecurityModule;
 import io.prestosql.version.EmbedVersion;
@@ -95,8 +95,8 @@ public class PrestoServer
                 new JmxHttpModule(),
                 new LogJmxModule(),
                 new TraceTokenModule(),
+                new EventModule(),
                 new JsonEventModule(),
-                new HttpEventModule(),
                 new ServerSecurityModule(),
                 new AccessControlModule(),
                 new EventListenerModule(),

@@ -15,14 +15,18 @@ package io.prestosql.spi.security;
 
 import java.security.Principal;
 import java.security.cert.X509Certificate;
+import java.util.List;
 
 public interface CertificateAuthenticator
 {
     /**
-     * Authorize using the certificate's principal
+     * Authenticate and extract principal from client certificate.
      *
-     * @return true when authorized
+     * @param certificates This client certificate chain, in ascending order of trust.
+     * The first certificate in the chain is the one set by the client, the next is the
+     * one used to authenticate the first, and so on.
+     * @return the authenticated entity
      * @throws AccessDeniedException if not allowed
      */
-    Principal authenticate(X509Certificate[] certs);
+    Principal authenticate(List<X509Certificate> certificates);
 }

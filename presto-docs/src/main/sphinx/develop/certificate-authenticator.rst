@@ -3,7 +3,7 @@ Certificate Authenticator
 =========================
 
 Presto supports TLS-based authentication with X509 certificates via a custom
-certificate authenticator that validates reads the principal from a valid client certificate.
+certificate authenticator that extracts the principal from a client certificate.
 
 Implementation
 --------------
@@ -13,7 +13,7 @@ Implementation
 authenticator which is used by the administrator in a Presto configuration.
 
 ``CertificateAuthenticator`` contains a single method, ``authenticate()``,
-which parses the client certificate and returns a ``Principal``, which is then
+which authenticates the client certificate and returns a ``Principal``, which is then
 authorized by the :doc:`system-access-control`.
 
 The implementation of ``CertificateAuthenticatorFactory`` must be wrapped
@@ -37,7 +37,7 @@ Example configuration file:
 
 .. code-block:: none
 
-    certificate-authenticator.name=standard
+    certificate-authenticator.name=custom
     custom-property1=custom-value1
     custom-property2=custom-value2
 

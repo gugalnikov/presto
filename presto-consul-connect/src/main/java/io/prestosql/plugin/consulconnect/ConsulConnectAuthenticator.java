@@ -31,6 +31,7 @@ import javax.inject.Inject;
 import java.security.Principal;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.List;
 
 public class ConsulConnectAuthenticator
         implements CertificateAuthenticator
@@ -52,12 +53,12 @@ public class ConsulConnectAuthenticator
     }
 
     @Override
-    public Principal authenticate(X509Certificate[] certs) throws AccessDeniedException
+    public Principal authenticate(List<X509Certificate> certificates) throws AccessDeniedException
     {
-        log.debug("principal: " + certs[0].getSubjectX500Principal());
-        String serialNumber = String.valueOf(certs[0].getSerialNumber());
-        String cert = certs[0].toString().trim();
-        String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + "svc/" + certs[0].getSubjectX500Principal().toString().split("=")[1];
+        log.debug("principal: " + certificates.get(0).getSubjectX500Principal());
+        String serialNumber = String.valueOf(certificates.get(0).getSerialNumber());
+        String cert = certificates.get(0).toString().trim();
+        String spiffeId = cert.substring(cert.indexOf(SPIFFE_PREFIX), cert.indexOf("svc/")) + "svc/" + certificates.get(0).getSubjectX500Principal().toString().split("=")[1];
         try {
             this.auth = new ObjectMapper().readValue(this.authorize(serialNumber, spiffeId), HashMap.class);
         }
@@ -66,7 +67,7 @@ public class ConsulConnectAuthenticator
         }
         log.debug("response:" + auth.toString());
         if (this.auth.get("Authorized").equals(true)) {
-            return certs[0].getSubjectX500Principal();
+            return certificates.get(0).getSubjectX500Principal();
         }
         else {
             throw new AccessDeniedException((String) this.auth.get("Reason"));
